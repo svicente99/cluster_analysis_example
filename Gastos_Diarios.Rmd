@@ -109,3 +109,8 @@ mtext( "legend:\n  Clusters: 1,2\n  Pessoas: a-e", cex=1, side=1, adj=-0.1, line
 
 \ 
 
+This [R] code is available to see and download from my GitHub:
+[https://github.com/svicente99/cluster_analysis_example](https://github.com/svicente99/cluster_analysis_example)
+
+\ 
+
