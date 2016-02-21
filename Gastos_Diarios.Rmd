@@ -1,0 +1,111 @@
+---
+title: "Cluster Analysis example"
+author: "Sergio Vicente"
+date: "20-02-2016"
+output: 
+  html_document:
+    fig_width: 6
+    fig_height: 5
+    fig_caption: true
+---
+
+\ 
+
+* This example was produced as an auxiliary study for the course 
+["Introdução ao Marketing Analítico", 4th module, by INSPER](https://www.coursera.org/learn/marketing-analitico/home/week/4), Coursera.org.
+
+* It is based on a small data set of **personal spent** ("gastos diários") (clothing and food). It demonstrates some techniques for Cluster Analysis.
+   
+\ 
+
+#### Reading data
+
+```{r}
+dt <- read.table("Gastos_Diarios.csv", sep=',', header=TRUE, row.names=1)
+names(dt) <- c("comida","roupas")
+print(head(dt))
+```
+
+\ 
+
+#### Plotting scattergram (XY graph)
+
+```{r, echo=FALSE}
+# http://www.statmethods.net/graphs/scatterplot.html
+plot(dt$comida, dt$roupas, main="Comida x Roupas\n(Food x Clothing)", xlab="Comida", ylab="Roupas")
+# http://www.statmethods.net/advgraphs/axes.html
+text(dt$comida, dt$roupas, row.names(dt), cex=0.6, pos=4, col="blue") 
+# print("Graphic XY (comida vs. roupas) is plotted.")
+```
+
+Prepare data - standardization
+```{r}
+dts <- na.omit(dt) # listwise deletion of missing
+dts <- scale(dts)  # standardize variables 
+print(dts)
+```
+
+
+-------
+#### Analysing clusters
+
+Visualizing the Dendrogram
+```{r}
+# https://rpubs.com/gaston/dendrograms
+hc = hclust(dist(dt))   		# prepare hierarchical cluster
+plot(hc, xlab="pessoas")		# very simple dendrogram
+box(which="figure",lty="solid",col="red",bg="yellow")
+```
+
+\ 
+
+Establishing number of clusters solution
+```{r}
+# http://www.statmethods.net/advstats/cluster.html
+wss <- (nrow(dts)-1)*sum(apply(dts,2,var))
+# nCenters <- nrow(dts)-1   # (maximum allowed)
+nCenters <- 2  			# (chosen visually, observing dendrogram image)	
+```
+
+Partioning by K-means
+```{r}
+for (i in 2:nCenters) 
+  wss[i] <- sum(kmeans(dts, centers=i)$withinss)
+plot(1:nCenters, wss, type="b", xlab="Number of Clusters", ylab="Within groups sum of squares") 
+```
+
+K-Means Cluster Analysis
+```{r}
+fit <- kmeans(dts, nCenters) 
+# get cluster means
+aggregate(dts,by=list(fit$cluster),FUN=mean)
+# append cluster assignment
+dt.cluster <- data.frame(dts, fit$cluster) 
+```
+
+#### Resulted Clusters 
+```{r, echo=FALSE}
+print(head(dt.cluster))
+```
+
+\ 
+
+#### Plotting the reviewed scattergram with clusters determined
+```{r, echo=FALSE,fig.height=7,fig.width=8}
+# Set up the plot region:
+par(bg="#fce8e4")
+plot(dt$comida, dt$roupas, main="Comida x Roupas - CLUSTERS\n(Food x Clothing)", sub="- personal spent -", xlab="Comida", ylab="Roupas", col.main="navy", pch=19)
+text(dt$comida, dt$roupas, dt.cluster$fit.cluster, cex=1.2, pos=2, col="blue", font=4) 
+text(dt$comida, dt$roupas, row.names(dt), cex=1.1, pos=4, col="maroon", font=2) 
+
+# http://stackoverflow.com/questions/22463710/filled-rectangle-in-r
+u <- par("usr")
+rect(u[1], u[3], u[2], u[4], col = "#fce802", border = "black", density=20, lty=2, angle=90) 
+box(which="figure",lty="solid",col="red",bg="yellow")
+mtext( "legend:\n  Clusters: 1,2\n  Pessoas: a-e", cex=1, side=1, adj=-0.1, line=3.4 )
+
+# print("XY cluster analysis (comida vs. roupas) is plotted.")
+```
+
+\ 
+
